@@ -1,0 +1,11 @@
+# Arduino and generated artefacts
+*.o
+*.obj
+*.elf
+*.hex
+*.bin
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+desktop.ini
