@@ -9,3 +9,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local media exports
+assets/media/demonstration_full.mp4
