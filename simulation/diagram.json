@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "author": "Bruno Araújo",
+  "author": "DegsTerin",
   "editor": "wokwi",
   "parts": [
     { "type": "wokwi-arduino-uno", "id": "uno", "top": -55.31, "left": -251.55, "attrs": {} },
