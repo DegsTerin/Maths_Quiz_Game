@@ -204,7 +204,10 @@ The repository also includes:
 
 ## Notes
 
+- This project is released under the MIT License. See `LICENSE`.
 - The repository combines source code, design assets, electronics documentation, and simulation files in one place.
 - The file `hardware/electronics/maths-quiz-game.txt` appears to use inconsistent encoding and was not treated as a primary documentation source.
+
+
 
 
