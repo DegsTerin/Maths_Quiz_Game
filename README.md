@@ -1,6 +1,18 @@
 # Maths Quiz Game
 
-An interactive Arduino maths game. The system randomly selects operations, shows the operands on 7-segment displays, displays the operation on an 8x8 matrix, and lets the player answer using three buttons. The difficulty level is controlled by a potentiometer, and the score is shown on a 16x2 LCD.
+An interactive Arduino-based maths quiz system with adaptive difficulty, multiple display modules, physical answer buttons, score tracking, and a complete Wokwi simulation setup.
+
+## Project summary
+
+This project presents arithmetic challenges using dedicated hardware modules:
+
+- two TM1637 displays for the operands
+- three TM1637 displays for the answer options
+- one 8x8 LED matrix for the selected operation
+- one 16x2 I2C LCD for level and score feedback
+- three answer buttons, one reset button, and one potentiometer for difficulty selection
+
+The main sketch is located at `arduino/maths-quiz-game/maths-quiz-game.ino`.
 
 ## Gallery
 
@@ -18,31 +30,26 @@ An interactive Arduino maths game. The system randomly selects operations, shows
 
 [Open the demonstration video](assets/media/demonstration.mp4)
 
-## Overview
-
-The main sketch is located at:
-
-`arduino/maths-quiz-game/maths-quiz-game.ino`
-
-Features implemented in the code:
+## Features
 
 - Addition, subtraction, multiplication, and division
 - Three difficulty levels: easy, medium, and hard
 - Animated operation selection on the 8x8 LED matrix
-- Three answer choices shown on TM1637 displays
-- Visual feedback with a right LED and a wrong LED
+- Three multiple-choice answers shown on TM1637 displays
+- Right and wrong feedback using dedicated LEDs
 - Right and wrong score tracking on the I2C LCD
-- Dedicated reset button to clear the game
+- Potentiometer-based difficulty selection
+- Browser-based simulation support with Wokwi
 
-## Components used
+## Hardware used
 
 - 1 Arduino board
 - 1 I2C 16x2 LCD at address `0x27`
-- 1 8x8 LED matrix with a `LedControl`-compatible driver
+- 1 8x8 LED matrix using a `LedControl`-compatible driver
 - 5 four-digit TM1637 displays
 - 3 answer buttons
 - 1 reset button
-- 1 potentiometer for difficulty selection
+- 1 potentiometer
 - 2 feedback LEDs
 - Resistors and wiring according to the assembled circuit
 
@@ -70,34 +77,34 @@ Configuration defined in the sketch:
 - Wrong LED: pin `13`
 - Potentiometer: `A0`
 
-Note: the code treats `HIGH` as a pressed button, and the sketch comments indicate that the current hardware uses external resistors.
+Note: the sketch treats `HIGH` as a pressed button, matching the current hardware configuration with external resistors.
 
 ## How the game works
 
-1. The potentiometer defines the current difficulty level.
-2. The system selects an operation with an animation on the 8x8 matrix.
+1. The potentiometer sets the current difficulty level.
+2. The system selects an operation and animates it on the 8x8 matrix.
 3. Two displays show the operands.
-4. Three displays show the answer choices.
+4. Three displays show the answer options.
 5. The player presses one of the three answer buttons.
-6. The system updates the correct and incorrect counters and shows visual feedback.
+6. The system updates the score and shows right or wrong feedback.
 7. The reset button clears the score and restarts the cycle.
 
-## Difficulty rules
+## Difficulty behaviour
 
-The code adjusts number ranges according to the selected level:
+The generated values change according to the selected level:
 
-- Easy: smaller numbers and a higher chance of simpler sums
+- Easy: smaller values and a higher chance of simpler calculations
 - Medium: wider ranges and a more balanced mix of operations
-- Hard: larger values and a heavier weight for multiplication and division
+- Hard: larger values and a stronger weighting towards multiplication and division
 
-For division:
+Division rules:
 
 - At easy level, division is more likely to be exact
-- At medium and hard levels, decimal results may appear
+- At medium and hard levels, decimal answers may appear
 
 ## Libraries
 
-Libraries referenced by the sketch:
+Libraries used by the sketch:
 
 - `TM1637Display`
 - `LiquidCrystal_I2C`
@@ -108,7 +115,7 @@ Libraries included in the repository:
 - `arduino/libraries/TM1637_Driver`
 - `arduino/libraries/LiquidCrystal_I2C`
 
-Note: the sketch includes `LedControl.h`, but that library does not appear to be versioned in this repository. If it is not installed in your Arduino IDE, you will need to add it manually.
+Note: the sketch includes `LedControl.h`, but that library is not versioned in this repository. If it is missing in your Arduino environment, install it manually.
 
 ## Repository structure
 
@@ -149,35 +156,35 @@ simulation/
 `-- wokwi-project.txt
 ```
 
-## How to run
+## Run on hardware
 
 1. Open the Arduino IDE.
-2. Ensure the required libraries are installed.
-3. Open the `arduino/maths-quiz-game/maths-quiz-game.ino` file.
+2. Install the required libraries if needed.
+3. Open `arduino/maths-quiz-game/maths-quiz-game.ino`.
 4. Connect the Arduino board.
 5. Compile and upload the sketch.
 
-## How to simulate in Wokwi
+## Simulate in Wokwi
 
-You can simulate the project in the Wokwi web editor at:
+You can start from the Arduino Uno template:
 
 `https://wokwi.com/projects/new/arduino-uno`
 
-Recommended setup steps:
+Recommended setup:
 
-1. Open a new Arduino Uno project in Wokwi.
-2. Replace the default `sketch.ino` content with the contents of `simulation/sketch.ino`, or copy the code from `arduino/maths-quiz-game/maths-quiz-game.ino`.
-3. Replace the default `diagram.json` content with the contents of `simulation/diagram.json`.
-4. Replace or create `libraries.txt` with the contents of `simulation/libraries.txt`.
-5. If needed, use Wokwi's Library Manager to confirm these libraries are installed: `TM1637Display`, `LiquidCrystal_I2C`, and `LedControl`.
+1. Create a new Arduino Uno project in Wokwi.
+2. Replace the default `sketch.ino` with `simulation/sketch.ino`, or copy the code from `arduino/maths-quiz-game/maths-quiz-game.ino`.
+3. Replace the default `diagram.json` with `simulation/diagram.json`.
+4. Replace or create `libraries.txt` using `simulation/libraries.txt`.
+5. Confirm that `TM1637Display`, `LiquidCrystal_I2C`, and `LedControl` are available in the project.
 6. Start the simulation.
 
 Notes:
 
 - The LCD address used by this project is `0x27`.
-- The local Wokwi files for this repository are stored in `simulation/`.
-- `simulation/wokwi-project.txt` contains the Wokwi project link or reference information.
-- If a required library is missing, the simulation will not compile until it is added to the Wokwi project.
+- All local Wokwi files are stored in `simulation/`.
+- `simulation/wokwi-project.txt` stores the Wokwi project link or reference details.
+- If a required library is missing, the simulation will not compile.
 
 ![Wokwi simulation layout](simulation/wokwi.png)
 
@@ -185,21 +192,13 @@ Notes:
 
 The repository also includes:
 
-- Electronics files in `hardware/electronics`
-- Vector design files for the enclosure/project in `design/vector`
-- An additional document in `docs/project-tutorial.docx`
-- Prototype photos in `assets/media`
-- Demonstration video in `assets/media/demonstration.mp4`
-- Wokwi simulation files in `simulation`
+- electronics files in `hardware/electronics`
+- vector design files in `design/vector`
+- a project tutorial document in `docs/project-tutorial.docx`
+- prototype photos and media in `assets/media`
+- complete Wokwi simulation files in `simulation`
 
 ## Notes
 
-- The project appears to have been organised as a complete build package, with code, artwork, and circuit files in the same repository.
-- The `maths-quiz-game.txt` file in the electronics folder appears to use inconsistent encoding and was not used as a primary source for this documentation.
-
-
-
-
-
-
-
+- The repository combines source code, design assets, electronics documentation, and simulation files in one place.
+- The file `hardware/electronics/maths-quiz-game.txt` appears to use inconsistent encoding and was not treated as a primary documentation source.
