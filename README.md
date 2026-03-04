@@ -1,4 +1,4 @@
-# MPA Tok Math
+# Maths Quiz Game
 
 An interactive Arduino maths game. The system randomly selects operations, shows the operands on 7-segment displays, displays the operation on an 8x8 matrix, and lets the player answer using three buttons. The difficulty level is controlled by a potentiometer, and the score is shown on a 16x2 LCD.
 
@@ -30,8 +30,8 @@ Features implemented in the code:
 - Three difficulty levels: easy, medium, and hard
 - Animated operation selection on the 8x8 LED matrix
 - Three answer choices shown on TM1637 displays
-- Visual feedback with a correct LED and an incorrect LED
-- Correct and incorrect score tracking on the I2C LCD
+- Visual feedback with a right LED and a wrong LED
+- Right and wrong score tracking on the I2C LCD
 - Dedicated reset button to clear the game
 
 ## Components used
@@ -66,8 +66,8 @@ Configuration defined in the sketch:
   - Button 2: `A2`
   - Button 3: `A3`
 - Reset button: pin `11`
-- Correct LED: pin `12`
-- Incorrect LED: pin `13`
+- Right LED: pin `12`
+- Wrong LED: pin `13`
 - Potentiometer: `A0`
 
 Note: the code treats `HIGH` as a pressed button, and the sketch comments indicate that the current hardware uses external resistors.
@@ -196,6 +196,7 @@ The repository also includes:
 
 - The project appears to have been organised as a complete build package, with code, artwork, and circuit files in the same repository.
 - The `maths-quiz-game.txt` file in the electronics folder appears to use inconsistent encoding and was not used as a primary source for this documentation.
+
 
 
 
