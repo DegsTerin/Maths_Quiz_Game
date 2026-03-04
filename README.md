@@ -30,9 +30,11 @@ The main sketch is located at `arduino/maths-quiz-game/maths-quiz-game.ino`.
 
 ![Top view of the prototype during assembly](assets/media/assembly-top.jpg)
 
-### Demonstration video
+### Demonstration preview
 
-[Open the demonstration video](assets/media/demonstration.mp4)
+![Animated demonstration of the maths quiz game](assets/media/demonstration.gif)
+
+[Open the full demonstration video](assets/media/demonstration.mp4)
 
 ## Features
 
@@ -136,6 +138,7 @@ assets/
     |-- maths-quiz-game-cover.png
     |-- assembly-front.jpg
     |-- assembly-top.jpg
+    |-- demonstration.gif
     `-- demonstration.mp4
 
 design/
@@ -207,6 +210,8 @@ The repository also includes:
 - This project is released under the MIT License. See `LICENSE`.
 - The repository combines source code, design assets, electronics documentation, and simulation files in one place.
 - The file `hardware/electronics/maths-quiz-game.txt` appears to use inconsistent encoding and was not treated as a primary documentation source.
+
+
 
 
 
