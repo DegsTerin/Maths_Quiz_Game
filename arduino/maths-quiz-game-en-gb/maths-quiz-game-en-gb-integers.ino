@@ -379,13 +379,7 @@ bool shouldGenerateExactDivision() {
 }
 
 bool shouldUseDecimalRound() {
-  if (game.level == LEVEL_EASY) {
-    return random(0, 100) < EASY_DECIMAL_ROUND_CHANCE_PERCENT;
-  }
-  if (game.level == LEVEL_MEDIUM) {
-    return random(0, 100) < MEDIUM_DECIMAL_ROUND_CHANCE_PERCENT;
-  }
-  return random(0, 100) < HARD_DECIMAL_ROUND_CHANCE_PERCENT;
+  return false;
 }
 
 double buildDecimalOperandFromInt(int base_value) {
@@ -874,67 +868,18 @@ double performOperation(double number_1, double number_2, Operation operation) {
 void generateNumbers() {
   int first_draw = 0;
   int second_draw = 0;
-  bool decimal_round = false;
 
   do {
     drawOperands(first_draw, second_draw);
-    double first_value = (double)first_draw;
-    double second_value = (double)second_draw;
-    decimal_round = shouldUseDecimalRound();
-
-    if (decimal_round) {
-      if (game.current_operation == OP_ADD || game.current_operation == OP_SUBTRACT) {
-        first_value = buildDecimalOperandFromInt(first_draw);
-        second_value = buildDecimalOperandFromInt(second_draw);
-      } else if (game.current_operation == OP_MULTIPLY) {
-        if (random(0, 2) == 0) first_value = buildDecimalOperandFromInt(first_draw);
-        else second_value = buildDecimalOperandFromInt(second_draw);
-      } else if (game.current_operation == OP_DIVIDE) {
-        int scale = random(0, 2) == 0 ? 10 : 100;
-        bool found_decimal_division = false;
-
-        for (int attempts = 0; attempts < 12; attempts++) {
-          int scaled_dividend = first_draw * scale + random(1, scale);
-          int required_decimal_places = getRequiredDecimalPlacesForExactDivision(scaled_dividend, second_draw * scale);
-          if (required_decimal_places > 0 && required_decimal_places <= 3) {
-            first_value = (double)scaled_dividend / (double)scale;
-            found_decimal_division = true;
-            break;
-          }
-        }
-
-        if (!found_decimal_division) {
-          decimal_round = false;
-        }
-      } else {
-        if (random(0, 2) == 0) first_value = buildDecimalOperandFromInt(first_draw);
-        else second_value = buildDecimalOperandFromInt(second_draw);
-      }
-    }
-
-    game.operand_1 = first_value;
-    game.operand_2 = second_value;
-    game.operation_result = performOperation(first_value, second_value, game.current_operation);
+    game.operand_1 = (double)first_draw;
+    game.operand_2 = (double)second_draw;
+    game.operation_result = performOperation(game.operand_1, game.operand_2, game.current_operation);
   } while (game.operation_result < 0 || game.operation_result >= 10000);
 
   game.result_decimal_places = 0;
-  if (decimal_round) {
-    int minimum_decimal_places = getMinimumDisplayDecimalPlaces(game.operation_result);
-    int max_display_decimal_places = getMaxDisplayDecimalPlaces(game.operation_result);
-    if (minimum_decimal_places > 0 && max_display_decimal_places >= minimum_decimal_places) {
-      game.result_decimal_places = random(minimum_decimal_places, max_display_decimal_places + 1);
-    }
-  } else if (game.current_operation == OP_DIVIDE) {
-    int required_decimal_places = getRequiredDecimalPlacesForExactDivision((int)round(game.operand_1), (int)round(game.operand_2));
-    int max_display_decimal_places = getMaxDisplayDecimalPlaces(game.operation_result);
 
-    if (required_decimal_places > 0 && max_display_decimal_places >= required_decimal_places) {
-      game.result_decimal_places = random(required_decimal_places, max_display_decimal_places + 1);
-    }
-  }
-
-  showNumber(number_display_1, game.operand_1);
-  showNumber(number_display_2, game.operand_2);
+  showNumber(number_display_1, game.operand_1, 0);
+  showNumber(number_display_2, game.operand_2, 0);
 }
 
 void shuffleDisplayPositions() {
@@ -1116,3 +1061,4 @@ void showOperationSymbol(Operation operation) {
     led_matrix.setRow(0, i, symbol[i]);
   }
 }
+

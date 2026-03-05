@@ -18,8 +18,10 @@ This project presents arithmetic challenges using dedicated hardware modules:
 
 Main sketches:
 
-- English (en-gb): `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb.ino`
-- Portuguese (pt-br): `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br.ino`
+- English (en-gb) - with decimal rounds: `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb.ino`
+- English (en-gb) - integers only (no decimal rounds): `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb-integers.ino`
+- Portuguese (pt-br) - with decimal rounds: `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br.ino`
+- Portuguese (pt-br) - integers only (no decimal rounds): `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br-integers.ino`
 
 ## Gallery
 
@@ -137,11 +139,16 @@ The generated values change according to the selected level:
 - Medium: wider ranges and a more balanced mix of operations
 - Hard: larger values and a stronger weighting towards multiplication and division
 
-Decimal behaviour:
+Decimal behaviour by sketch variant:
 
-- Easy: 10% of rounds may include decimal operands/results
-- Medium: 20%
-- Hard: 30%
+- Decimal variant (`maths-quiz-game-en-gb.ino` and `maths-quiz-game-pt-br.ino`):
+  - Easy: 10% of rounds may include decimal operands/results
+  - Medium: 20%
+  - Hard: 30%
+- Integer-only variant (`maths-quiz-game-en-gb-integers.ino` and `maths-quiz-game-pt-br-integers.ino`):
+  - No decimal operands
+  - No decimal results
+  - Division is generated to keep integer results
 
 ## Libraries
 
@@ -166,9 +173,11 @@ arduino/
 |   |-- LiquidCrystal_I2C/
 |   `-- TM1637_Driver/
 |-- maths-quiz-game-en-gb/
-|   `-- maths-quiz-game-en-gb.ino
+|   |-- maths-quiz-game-en-gb.ino
+|   `-- maths-quiz-game-en-gb-integers.ino
 `-- maths-quiz-game-pt-br/
-    `-- maths-quiz-game-pt-br.ino
+    |-- maths-quiz-game-pt-br.ino
+    `-- maths-quiz-game-pt-br-integers.ino
 
 assets/
 `-- media/
@@ -184,7 +193,9 @@ design/
     `-- maths-box-v8.ai
 
 docs/
-`-- project-tutorial.docx
+|-- project-tutorial.docx
+|-- release-v1.0.0.md
+`-- release-v1.1.0.md
 
 hardware/
 `-- electronics/
@@ -195,7 +206,6 @@ hardware/
 simulation/
 |-- diagram.json
 |-- libraries.txt
-|-- sketch.ino
 |-- wokwi.png
 `-- wokwi-project.txt
 ```
@@ -219,9 +229,11 @@ You can start from the Arduino Uno template:
 Recommended setup:
 
 1. Create a new Arduino Uno project in Wokwi.
-2. Replace the default `sketch.ino` with `simulation/sketch.ino`, or copy the code from one of:
+2. Replace the default `sketch.ino` by copying code from one of:
    - `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb.ino`
+   - `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb-integers.ino`
    - `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br.ino`
+   - `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br-integers.ino`
 3. Replace the default `diagram.json` with `simulation/diagram.json`.
 4. Replace or create `libraries.txt` using `simulation/libraries.txt`.
 5. Confirm that `TM1637Display`, `LiquidCrystal_I2C`, and `LedControl` are available in the project.
