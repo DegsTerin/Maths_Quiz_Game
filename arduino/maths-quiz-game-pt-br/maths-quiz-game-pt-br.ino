@@ -192,7 +192,7 @@ void initialiseLcd() {
 
   lcd->init();
   lcd->setBacklight(HIGH);
-  Serial.print(F("LCD I2C address: 0x"));
+  Serial.print(F("Endereco I2C LCD: 0x"));
   if (lcd_address < 0x10) {
     Serial.print('0');
   }
@@ -546,8 +546,8 @@ void printRoundDebug(double option_1, double option_2, double option_3, int resu
   int operand_1_places = getMinimumDisplayDecimalPlaces(game.operand_1);
   int operand_2_places = getMinimumDisplayDecimalPlaces(game.operand_2);
 
-  Serial.println(F("---- Round ----"));
-  Serial.print(F("Equation: "));
+  Serial.println(F("---- Rodada ----"));
+  Serial.print(F("Equacao: "));
   Serial.print(formatValueForSerial(game.operand_1, operand_1_places));
   Serial.print(' ');
   Serial.print(getOperationSymbolText(game.current_operation));
@@ -556,14 +556,14 @@ void printRoundDebug(double option_1, double option_2, double option_3, int resu
   Serial.print(F(" = "));
   Serial.println(formatValueForSerial(game.operation_result, result_decimal_places));
 
-  Serial.print(F("Options: [1] "));
+  Serial.print(F("Opcoes: [1] "));
   Serial.print(formatValueForSerial(option_1, result_decimal_places));
   Serial.print(F(" | [2] "));
   Serial.print(formatValueForSerial(option_2, result_decimal_places));
   Serial.print(F(" | [3] "));
   Serial.println(formatValueForSerial(option_3, result_decimal_places));
 
-  Serial.print(F("Correct option: "));
+  Serial.print(F("Opcao correta: "));
   Serial.println(game.correct_answer_position);
 }
 
@@ -616,13 +616,13 @@ void drawOperands(int &first_draw, int &second_draw) {
 }
 
 const char* getLevelName() {
-  if (game.level == LEVEL_EASY) return "Easy";
-  if (game.level == LEVEL_MEDIUM) return "Medium";
-  return "Hard";
+  if (game.level == LEVEL_EASY) return "Facil";
+  if (game.level == LEVEL_MEDIUM) return "Medio";
+  return "Dificil";
 }
 
 const char* getShortOperationName() {
-  if (game.current_operation == OP_ADD) return "Add";
+  if (game.current_operation == OP_ADD) return "Soma";
   if (game.current_operation == OP_SUBTRACT) return "Sub";
   if (game.current_operation == OP_MULTIPLY) return "Mult";
   if (game.current_operation == OP_DIVIDE) return "Div";
@@ -693,13 +693,13 @@ void finishNewRound() {
 // Answer input and feedback.
 // ---------------------------------------------------------------------------
 void handleCorrectAnswer() {
-  Serial.println(F("correct answer"));
+  Serial.println(F("resposta correta"));
   game.correct_answers++;
   showCorrectAnswer(*tm1637_displays[game.correct_answer_position + 1]);
 }
 
 void handleIncorrectAnswer() {
-  Serial.println(F("incorrect answer"));
+  Serial.println(F("resposta incorreta"));
   digitalWrite(correct_led_pin, LOW);
   digitalWrite(incorrect_led_pin, HIGH);
   game.incorrect_answers++;
@@ -748,21 +748,21 @@ void showLcdSelecting() {
   clearLcdLine(0);
   clearLcdLine(1);
   lcd->setCursor(0, 0);
-  lcd->print(F("Mode: "));
+  lcd->print(F("Modo: "));
   lcd->print(getLevelName());
   lcd->setCursor(0, 1);
-  lcd->print(F("Selecting..."));
+  lcd->print(F("Sorteando ..."));
 }
 
 void showLcdAnswerResult(bool is_correct) {
   clearLcdLine(0);
   clearLcdLine(1);
   lcd->setCursor(0, 0);
-  lcd->print(is_correct ? F("Right Answer") : F("Wrong Answer"));
+  lcd->print(is_correct ? F("Resposta Certa") : F("Resposta Errada"));
   lcd->setCursor(0, 1);
-  lcd->print(F("Right:"));
+  lcd->print(F("Certo:"));
   lcd->print(game.correct_answers);
-  lcd->print(F(" Wrong:"));
+  lcd->print(F(" Erro:"));
   lcd->print(game.incorrect_answers);
 }
 
@@ -774,9 +774,9 @@ void showLcdGame() {
   lcd->print(" ");
   lcd->print(getShortOperationName());
   lcd->setCursor(0, 1);
-  lcd->print(F("Right:"));
+  lcd->print(F("Certo:"));
   lcd->print(game.correct_answers);
-  lcd->print(F(" Wrong:"));
+  lcd->print(F(" Erro:"));
   lcd->print(game.incorrect_answers);
 }
 
@@ -940,7 +940,7 @@ void generateNumbers() {
 
   showNumber(number_display_1, game.operand_1);
   showNumber(number_display_2, game.operand_2);
-  Serial.println(String(F("operation result: ")) + String(game.operation_result));
+  Serial.println(String(F("resultado operacao: ")) + String(game.operation_result));
 }
 
 void shuffleDisplayPositions() {
