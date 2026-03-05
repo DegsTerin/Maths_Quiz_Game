@@ -883,14 +883,8 @@ void generateNumbers() {
 
     if (decimal_round) {
       if (game.current_operation == OP_ADD || game.current_operation == OP_SUBTRACT) {
-        bool first_is_decimal = random(0, 2) == 0;
-        bool second_is_decimal = random(0, 2) == 0;
-        if (!first_is_decimal && !second_is_decimal) {
-          first_is_decimal = true;
-        }
-
-        if (first_is_decimal) first_value = buildDecimalOperandFromInt(first_draw);
-        if (second_is_decimal) second_value = buildDecimalOperandFromInt(second_draw);
+        first_value = buildDecimalOperandFromInt(first_draw);
+        second_value = buildDecimalOperandFromInt(second_draw);
       } else if (game.current_operation == OP_MULTIPLY) {
         if (random(0, 2) == 0) first_value = buildDecimalOperandFromInt(first_draw);
         else second_value = buildDecimalOperandFromInt(second_draw);
@@ -1054,6 +1048,10 @@ void showNumber(TM1637Display &display, double value, int forced_decimal_places)
   int max_display_decimal_places = getMaxDisplayDecimalPlaces(value);
   decimal_places = clampInt(decimal_places, 0, max_display_decimal_places);
   double rounded_value = roundToDecimalPlaces(value, decimal_places);
+  if (decimal_places > 0 && fabs(rounded_value - round(rounded_value)) < 0.0005) {
+    decimal_places = 0;
+    rounded_value = round(rounded_value);
+  }
 
   if (decimal_places == 0) {
     display.showNumberDec((int)round(rounded_value), false);
@@ -1065,7 +1063,8 @@ void showNumber(TM1637Display &display, double value, int forced_decimal_places)
   int decimal_part = (int)round((rounded_value - integer_part) * scale);
   int display_number = integer_part * scale + decimal_part;
 
-  display.showNumberDecEx(display_number, getDecimalDot(decimal_places), false, 4, 0);
+  bool show_leading_zero = (integer_part == 0 && decimal_places == 3);
+  display.showNumberDecEx(display_number, getDecimalDot(decimal_places), show_leading_zero, 4, 0);
 }
 
 void showNumber(TM1637Display &display, double value) {
