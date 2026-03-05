@@ -4,7 +4,11 @@
 #include <TM1637Display.h>
 #include <LiquidCrystal_I2C.h>
 
-const uint8_t LCD_ADDRESS = 0x27;
+const uint8_t LCD_PRIMARY_ADDRESS_START = 0x20;
+const uint8_t LCD_PRIMARY_ADDRESS_END = 0x27;
+const uint8_t LCD_SECONDARY_ADDRESS_START = 0x38;
+const uint8_t LCD_SECONDARY_ADDRESS_END = 0x3F;
+const uint8_t LCD_FALLBACK_ADDRESS = 0x27;
 const int LCD_COLUMNS = 16;
 const int LCD_ROWS = 2;
 
@@ -19,6 +23,9 @@ const int TOTAL_ANSWER_DISPLAYS = 3;
 const int EASY_NUMBER_LIMIT = 10;
 const int MEDIUM_NUMBER_LIMIT = 50;
 const int HARD_NUMBER_LIMIT = 100;
+const int EASY_DECIMAL_ROUND_CHANCE_PERCENT = 10;
+const int MEDIUM_DECIMAL_ROUND_CHANCE_PERCENT = 20;
+const int HARD_DECIMAL_ROUND_CHANCE_PERCENT = 30;
 
 const int EASY_MULTIPLICATION_LIMIT = 5;
 const int MEDIUM_MULTIPLICATION_LIMIT = 12;
@@ -50,7 +57,7 @@ const int INCORRECT_LED_PIN = 13;
 const int POTENTIOMETER_PIN = A0;
 
 const int TOTAL_BUTTONS = 4;
-const int PRESSED_BUTTON_LEVEL = HIGH;
+const int PRESSED_BUTTON_LEVEL = LOW;
 
 const unsigned long DEBOUNCE_MS = 40;
 const unsigned long INCORRECT_FEEDBACK_MS = 1000;
@@ -71,16 +78,16 @@ enum GameStatus {
 struct GameState {
   int correct_answer_position = 0;
   bool round_started = false;
-  int operand_1 = 0;
-  int operand_2 = 0;
+  double operand_1 = 0;
+  double operand_2 = 0;
   double operation_result = 0;
   Operation current_operation = OP_NONE;
   int level = 0;
   int correct_answers = 0;
   int incorrect_answers = 0;
   GameStatus status = STATUS_WAITING_FOR_ANSWER;
-  bool previous_button_readings[TOTAL_BUTTONS] = {LOW, LOW, LOW, LOW};
-  bool stable_button_states[TOTAL_BUTTONS] = {LOW, LOW, LOW, LOW};
+  bool previous_button_readings[TOTAL_BUTTONS] = {HIGH, HIGH, HIGH, HIGH};
+  bool stable_button_states[TOTAL_BUTTONS] = {HIGH, HIGH, HIGH, HIGH};
   unsigned long last_debounce_time[TOTAL_BUTTONS] = {0, 0, 0, 0};
   unsigned long feedback_start_time = 0;
   unsigned long last_flash_toggle_time = 0;
@@ -91,6 +98,7 @@ struct GameState {
   int total_operation_animation_steps = 0;
   int current_operation_animation_step = 0;
   int operation_flash_stage = -1;
+  int result_decimal_places = 0;
 };
 
 struct LCDState {
@@ -102,7 +110,7 @@ struct LCDState {
   Operation operation = OP_NONE;
 };
 
-LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+LiquidCrystal_I2C* lcd = NULL;
 LedControl led_matrix = LedControl(MATRIX_DIN_PIN, MATRIX_CS_PIN, MATRIX_CLK_PIN, 1);
 
 TM1637Display number_display_1(DISPLAY_CLK_PINS[0], DISPLAY_DIO_PIN);
@@ -149,6 +157,48 @@ byte divide_symbol[] = {
   B01011010, B00011000, B00011000, B00000000
 };
 
+int getRequiredDecimalPlacesForExactDivision(int dividend, int divisor);
+int getMaxDisplayDecimalPlaces(double value);
+double roundToDecimalPlaces(double value, int decimal_places);
+int getMinimumDisplayDecimalPlaces(double value);
+void showNumber(TM1637Display &display, double value, int forced_decimal_places);
+void showNumber(TM1637Display &display, double value);
+
+bool isI2cDeviceAvailable(uint8_t address) {
+  Wire.beginTransmission(address);
+  return Wire.endTransmission() == 0;
+}
+
+uint8_t findLcdAddress() {
+  for (uint8_t address = LCD_PRIMARY_ADDRESS_START; address <= LCD_PRIMARY_ADDRESS_END; address++) {
+    if (isI2cDeviceAvailable(address)) {
+      return address;
+    }
+  }
+
+  for (uint8_t address = LCD_SECONDARY_ADDRESS_START; address <= LCD_SECONDARY_ADDRESS_END; address++) {
+    if (isI2cDeviceAvailable(address)) {
+      return address;
+    }
+  }
+
+  return LCD_FALLBACK_ADDRESS;
+}
+
+void initialiseLcd() {
+  Wire.begin();
+  uint8_t lcd_address = findLcdAddress();
+  lcd = new LiquidCrystal_I2C(lcd_address, LCD_COLUMNS, LCD_ROWS);
+
+  lcd->init();
+  lcd->setBacklight(HIGH);
+  Serial.print(F("LCD I2C address: 0x"));
+  if (lcd_address < 0x10) {
+    Serial.print('0');
+  }
+  Serial.println(lcd_address, HEX);
+}
+
 // ---------------------------------------------------------------------------
 // Initialisation and main loop.
 // ---------------------------------------------------------------------------
@@ -164,15 +214,14 @@ void setup() {
   pinMode(incorrect_led_pin, OUTPUT);
 
   for (int i = 0; i < TOTAL_ANSWER_DISPLAYS; i++) {
-    // The current hardware uses external resistors, with a pressed button read as HIGH.
-    pinMode(answer_button_pins[i], INPUT);
+    // Buttons use the internal pull-up resistor, so pressed reads LOW.
+    pinMode(answer_button_pins[i], INPUT_PULLUP);
   }
 
-  pinMode(reset_button_pin, INPUT);
+  pinMode(reset_button_pin, INPUT_PULLUP);
   pinMode(potentiometer_pin, INPUT);
 
-  lcd.init();
-  lcd.setBacklight(HIGH);
+  initialiseLcd();
 }
 
 // Main game loop.
@@ -231,6 +280,7 @@ void restartSystem() {
   game.total_operation_animation_steps = 0;
   game.current_operation_animation_step = 0;
   game.operation_flash_stage = -1;
+  game.result_decimal_places = 0;
   game.status = STATUS_SELECTING_OPERATION;
   game.round_started = false;
 }
@@ -242,8 +292,8 @@ void resetAllDisplays() {
 }
 
 void clearLcdLine(int row) {
-  lcd.setCursor(0, row);
-  lcd.print(F("                "));
+  lcd->setCursor(0, row);
+  lcd->print(F("                "));
 }
 
 bool lcdNeedsUpdate() {
@@ -300,14 +350,14 @@ int clampInt(int value, int minimum, int maximum) {
 
 int getWrongAnswerIntegerOffset() {
   if (game.current_operation == OP_ADD || game.current_operation == OP_SUBTRACT) {
-    return clampInt(game.operand_2 / 2, 1, MAX_WRONG_ANSWER_OFFSET);
+    return clampInt((int)round(game.operand_2 / 2.0), 1, MAX_WRONG_ANSWER_OFFSET);
   }
 
   if (game.current_operation == OP_MULTIPLY) {
-    return clampInt(max(game.operand_1, game.operand_2) / 2, 2, 15);
+    return clampInt((int)round(max(game.operand_1, game.operand_2) / 2.0), 2, 15);
   }
 
-  return clampInt(game.operand_2, 1, MAX_WRONG_ANSWER_OFFSET);
+  return clampInt((int)round(game.operand_2), 1, MAX_WRONG_ANSWER_OFFSET);
 }
 
 double getWrongAnswerStep(int decimal_places) {
@@ -325,8 +375,196 @@ double getWrongAnswerStep(int decimal_places) {
 }
 
 bool shouldGenerateExactDivision() {
-  if (game.level == LEVEL_EASY) return true;
-  return random(0, 2) == 0;
+  return true;
+}
+
+bool shouldUseDecimalRound() {
+  if (game.level == LEVEL_EASY) {
+    return random(0, 100) < EASY_DECIMAL_ROUND_CHANCE_PERCENT;
+  }
+  if (game.level == LEVEL_MEDIUM) {
+    return random(0, 100) < MEDIUM_DECIMAL_ROUND_CHANCE_PERCENT;
+  }
+  return random(0, 100) < HARD_DECIMAL_ROUND_CHANCE_PERCENT;
+}
+
+double buildDecimalOperandFromInt(int base_value) {
+  int decimal_places = random(1, 3);  // 1 or 2 decimal places.
+  int scale = decimal_places == 1 ? 10 : 100;
+  int decimal_part = random(1, scale);
+  return (double)base_value + ((double)decimal_part / (double)scale);
+}
+
+int getGreatestCommonDivisor(int first_value, int second_value) {
+  first_value = abs(first_value);
+  second_value = abs(second_value);
+
+  while (second_value != 0) {
+    int remainder = first_value % second_value;
+    first_value = second_value;
+    second_value = remainder;
+  }
+
+  return first_value == 0 ? 1 : first_value;
+}
+
+int getRequiredDecimalPlacesForExactDivision(int dividend, int divisor) {
+  if (divisor == 0) return -1;
+
+  int gcd = getGreatestCommonDivisor(dividend, divisor);
+  int reduced_divisor = abs(divisor) / gcd;
+  int power_of_two = 0;
+  int power_of_five = 0;
+
+  while (reduced_divisor % 2 == 0) {
+    reduced_divisor /= 2;
+    power_of_two++;
+  }
+
+  while (reduced_divisor % 5 == 0) {
+    reduced_divisor /= 5;
+    power_of_five++;
+  }
+
+  if (reduced_divisor != 1) {
+    return -1;
+  }
+
+  return max(power_of_two, power_of_five);
+}
+
+int getMaxDisplayDecimalPlaces(double value) {
+  long integer_part = (long)value;
+  if (integer_part < 0) integer_part = -integer_part;
+
+  int integer_digits = 1;
+  while (integer_part >= 10) {
+    integer_part /= 10;
+    integer_digits++;
+  }
+
+  if (integer_digits >= 4) return 0;
+  if (integer_digits == 3) return 1;
+  if (integer_digits == 2) return 2;
+  return 3;
+}
+
+bool divisionHasAtMostThreeDecimalPlaces(int dividend, int divisor) {
+  int required_decimal_places = getRequiredDecimalPlacesForExactDivision(dividend, divisor);
+  if (required_decimal_places < 0 || required_decimal_places > 3) {
+    return false;
+  }
+
+  double result = (double)dividend / (double)divisor;
+  int max_display_decimal_places = getMaxDisplayDecimalPlaces(result);
+  return required_decimal_places <= max_display_decimal_places;
+}
+
+int getMinimumDisplayDecimalPlaces(double value) {
+  for (int decimal_places = 0; decimal_places <= 3; decimal_places++) {
+    double rounded_value = roundToDecimalPlaces(value, decimal_places);
+    if (fabs(value - rounded_value) < 0.0005) {
+      return decimal_places;
+    }
+  }
+
+  return 3;
+}
+
+double getDisplayMaximumForDecimalPlaces(int decimal_places) {
+  int scale = 1;
+  for (int i = 0; i < decimal_places; i++) {
+    scale *= 10;
+  }
+  return 9999.0 / (double)scale;
+}
+
+double drawNearbyWrongAnswer(double correct_answer, int decimal_places, int preferred_direction) {
+  int scale = getDecimalScale(decimal_places);
+  double step = 1.0 / (double)scale;
+  double maximum_value = getDisplayMaximumForDecimalPlaces(decimal_places);
+
+  double minimum_distance = decimal_places == 0 ? 1.0 : step * 2.0;
+  if (game.level == LEVEL_EASY) minimum_distance = decimal_places == 0 ? 2.0 : step * 3.0;
+
+  double distance_cap = 40.0;
+  if (game.level == LEVEL_EASY) distance_cap = 120.0;
+  else if (game.level == LEVEL_MEDIUM) distance_cap = 70.0;
+  if (decimal_places > 0) distance_cap *= 0.6;
+
+  double adaptive_distance = fabs(correct_answer) * 0.40 + (game.level == LEVEL_EASY ? 8.0 : 4.0);
+  double maximum_distance = min(distance_cap, max(minimum_distance * 2.0, adaptive_distance));
+
+  int minimum_steps = max(1, (int)ceil(minimum_distance * scale));
+  int maximum_steps = max(minimum_steps + 1, (int)floor(maximum_distance * scale));
+  int offset_steps = random(minimum_steps, maximum_steps + 1);
+
+  int direction = preferred_direction;
+  if (direction == 0) direction = random(0, 2) == 0 ? -1 : 1;
+
+  double candidate = correct_answer + (direction * offset_steps * step);
+  if (candidate < 0.0 || candidate > maximum_value) {
+    candidate = correct_answer - (direction * offset_steps * step);
+  }
+
+  candidate = roundToDecimalPlaces(candidate, decimal_places);
+  if (candidate < 0.0) candidate = 0.0;
+  if (candidate > maximum_value) candidate = maximum_value;
+
+  if (candidate == correct_answer) {
+    double fallback = correct_answer + ((direction > 0 ? -1.0 : 1.0) * minimum_steps * step);
+    candidate = roundToDecimalPlaces(fallback, decimal_places);
+    if (candidate < 0.0) candidate = roundToDecimalPlaces(correct_answer + (minimum_steps * step), decimal_places);
+  }
+
+  return candidate;
+}
+
+const char* getOperationSymbolText(Operation operation) {
+  if (operation == OP_ADD) return "+";
+  if (operation == OP_SUBTRACT) return "-";
+  if (operation == OP_MULTIPLY) return "x";
+  if (operation == OP_DIVIDE) return "/";
+  return "?";
+}
+
+String formatValueForSerial(double value, int decimal_places) {
+  int places = decimal_places;
+  if (places < 0) {
+    places = getMinimumDisplayDecimalPlaces(value);
+  }
+
+  double rounded_value = roundToDecimalPlaces(value, places);
+  if (places == 0) {
+    return String((long)round(rounded_value));
+  }
+
+  return String(rounded_value, places);
+}
+
+void printRoundDebug(double option_1, double option_2, double option_3, int result_decimal_places) {
+  int operand_1_places = getMinimumDisplayDecimalPlaces(game.operand_1);
+  int operand_2_places = getMinimumDisplayDecimalPlaces(game.operand_2);
+
+  Serial.println(F("---- Round ----"));
+  Serial.print(F("Equation: "));
+  Serial.print(formatValueForSerial(game.operand_1, operand_1_places));
+  Serial.print(' ');
+  Serial.print(getOperationSymbolText(game.current_operation));
+  Serial.print(' ');
+  Serial.print(formatValueForSerial(game.operand_2, operand_2_places));
+  Serial.print(F(" = "));
+  Serial.println(formatValueForSerial(game.operation_result, result_decimal_places));
+
+  Serial.print(F("Options: [1] "));
+  Serial.print(formatValueForSerial(option_1, result_decimal_places));
+  Serial.print(F(" | [2] "));
+  Serial.print(formatValueForSerial(option_2, result_decimal_places));
+  Serial.print(F(" | [3] "));
+  Serial.println(formatValueForSerial(option_3, result_decimal_places));
+
+  Serial.print(F("Correct option: "));
+  Serial.println(game.correct_answer_position);
 }
 
 void drawOperands(int &first_draw, int &second_draw) {
@@ -351,15 +589,30 @@ void drawOperands(int &first_draw, int &second_draw) {
     return;
   }
 
-  int divisor = random(2, getDivisorLimitForLevel() + 1);
-  if (shouldGenerateExactDivision()) {
-    int maximum_quotient = max(1, getDividendLimitForLevel() / divisor);
-    second_draw = divisor;
-    first_draw = divisor * random(1, maximum_quotient + 1);
-  } else {
-    first_draw = random(1, getDividendLimitForLevel() + 1);
-    second_draw = divisor;
+  int dividend_limit = getDividendLimitForLevel();
+  bool prefer_exact_division = shouldGenerateExactDivision();
+
+  for (int attempts = 0; attempts < 40; attempts++) {
+    int divisor = random(2, getDivisorLimitForLevel() + 1);
+
+    if (prefer_exact_division) {
+      int maximum_quotient = max(1, dividend_limit / divisor);
+      second_draw = divisor;
+      first_draw = divisor * random(1, maximum_quotient + 1);
+    } else {
+      first_draw = random(1, dividend_limit + 1);
+      second_draw = divisor;
+    }
+
+    if (divisionHasAtMostThreeDecimalPlaces(first_draw, second_draw)) {
+      return;
+    }
   }
+
+  int safe_divisor = random(2, getDivisorLimitForLevel() + 1);
+  int maximum_quotient = max(1, dividend_limit / safe_divisor);
+  second_draw = safe_divisor;
+  first_draw = safe_divisor * random(1, maximum_quotient + 1);
 }
 
 const char* getLevelName() {
@@ -401,6 +654,7 @@ Operation drawOperationForLevel() {
 
 int getLevelFromPotentiometer(int reading) {
   if (game.level <= LEVEL_EASY) {
+    if (reading >= MEDIUM_POTENTIOMETER_LIMIT + LEVEL_HYSTERESIS) return LEVEL_HARD;
     if (reading >= EASY_POTENTIOMETER_LIMIT + LEVEL_HYSTERESIS) return LEVEL_MEDIUM;
     return LEVEL_EASY;
   }
@@ -411,6 +665,7 @@ int getLevelFromPotentiometer(int reading) {
     return LEVEL_MEDIUM;
   }
 
+  if (reading <= EASY_POTENTIOMETER_LIMIT - LEVEL_HYSTERESIS) return LEVEL_EASY;
   if (reading <= MEDIUM_POTENTIOMETER_LIMIT - LEVEL_HYSTERESIS) return LEVEL_MEDIUM;
   return LEVEL_HARD;
 }
@@ -492,37 +747,37 @@ bool readingMeansButtonPressed(bool reading) {
 void showLcdSelecting() {
   clearLcdLine(0);
   clearLcdLine(1);
-  lcd.setCursor(0, 0);
-  lcd.print(F("Mode: "));
-  lcd.print(getLevelName());
-  lcd.setCursor(0, 1);
-  lcd.print(F("Selecting..."));
+  lcd->setCursor(0, 0);
+  lcd->print(F("Mode: "));
+  lcd->print(getLevelName());
+  lcd->setCursor(0, 1);
+  lcd->print(F("Selecting..."));
 }
 
 void showLcdAnswerResult(bool is_correct) {
   clearLcdLine(0);
   clearLcdLine(1);
-  lcd.setCursor(0, 0);
-  lcd.print(is_correct ? F("Right Answer") : F("Wrong Answer"));
-  lcd.setCursor(0, 1);
-  lcd.print(F("Right:"));
-  lcd.print(game.correct_answers);
-  lcd.print(F(" Wrong:"));
-  lcd.print(game.incorrect_answers);
+  lcd->setCursor(0, 0);
+  lcd->print(is_correct ? F("Right Answer") : F("Wrong Answer"));
+  lcd->setCursor(0, 1);
+  lcd->print(F("Right:"));
+  lcd->print(game.correct_answers);
+  lcd->print(F(" Wrong:"));
+  lcd->print(game.incorrect_answers);
 }
 
 void showLcdGame() {
   clearLcdLine(0);
   clearLcdLine(1);
-  lcd.setCursor(0, 0);
-  lcd.print(getLevelName());
-  lcd.print(" ");
-  lcd.print(getShortOperationName());
-  lcd.setCursor(0, 1);
-  lcd.print(F("Right:"));
-  lcd.print(game.correct_answers);
-  lcd.print(F(" Wrong:"));
-  lcd.print(game.incorrect_answers);
+  lcd->setCursor(0, 0);
+  lcd->print(getLevelName());
+  lcd->print(" ");
+  lcd->print(getShortOperationName());
+  lcd->setCursor(0, 1);
+  lcd->print(F("Right:"));
+  lcd->print(game.correct_answers);
+  lcd->print(F(" Wrong:"));
+  lcd->print(game.incorrect_answers);
 }
 
 // ---------------------------------------------------------------------------
@@ -546,7 +801,7 @@ void updateAnswerFeedback() {
       if (game.answer_visible) {
         resetDisplay(*game.correct_answer_display);
       } else {
-        showNumber(*game.correct_answer_display, game.operation_result);
+        showNumber(*game.correct_answer_display, game.operation_result, game.result_decimal_places);
       }
 
       game.answer_visible = !game.answer_visible;
@@ -601,7 +856,7 @@ void updateOperationAnimation() {
 // ---------------------------------------------------------------------------
 // Number and answer generation.
 // ---------------------------------------------------------------------------
-double performOperation(int number_1, int number_2, Operation operation) {
+double performOperation(double number_1, double number_2, Operation operation) {
   if (operation == OP_ADD) {
     return number_1 + number_2;
   } else if (operation == OP_SUBTRACT) {
@@ -618,46 +873,86 @@ double performOperation(int number_1, int number_2, Operation operation) {
 void generateNumbers() {
   int first_draw = 0;
   int second_draw = 0;
+  bool decimal_round = false;
 
   do {
     drawOperands(first_draw, second_draw);
-    game.operand_1 = first_draw;
-    game.operand_2 = second_draw;
-    game.operation_result = performOperation(first_draw, second_draw, game.current_operation);
+    double first_value = (double)first_draw;
+    double second_value = (double)second_draw;
+    decimal_round = shouldUseDecimalRound();
+
+    if (decimal_round) {
+      if (game.current_operation == OP_ADD || game.current_operation == OP_SUBTRACT) {
+        bool first_is_decimal = random(0, 2) == 0;
+        bool second_is_decimal = random(0, 2) == 0;
+        if (!first_is_decimal && !second_is_decimal) {
+          first_is_decimal = true;
+        }
+
+        if (first_is_decimal) first_value = buildDecimalOperandFromInt(first_draw);
+        if (second_is_decimal) second_value = buildDecimalOperandFromInt(second_draw);
+      } else if (game.current_operation == OP_MULTIPLY) {
+        if (random(0, 2) == 0) first_value = buildDecimalOperandFromInt(first_draw);
+        else second_value = buildDecimalOperandFromInt(second_draw);
+      } else if (game.current_operation == OP_DIVIDE) {
+        int scale = random(0, 2) == 0 ? 10 : 100;
+        bool found_decimal_division = false;
+
+        for (int attempts = 0; attempts < 12; attempts++) {
+          int scaled_dividend = first_draw * scale + random(1, scale);
+          int required_decimal_places = getRequiredDecimalPlacesForExactDivision(scaled_dividend, second_draw * scale);
+          if (required_decimal_places > 0 && required_decimal_places <= 3) {
+            first_value = (double)scaled_dividend / (double)scale;
+            found_decimal_division = true;
+            break;
+          }
+        }
+
+        if (!found_decimal_division) {
+          decimal_round = false;
+        }
+      } else {
+        if (random(0, 2) == 0) first_value = buildDecimalOperandFromInt(first_draw);
+        else second_value = buildDecimalOperandFromInt(second_draw);
+      }
+    }
+
+    game.operand_1 = first_value;
+    game.operand_2 = second_value;
+    game.operation_result = performOperation(first_value, second_value, game.current_operation);
   } while (game.operation_result < 0 || game.operation_result >= 10000);
 
-  showNumber(number_display_1, first_draw);
-  showNumber(number_display_2, second_draw);
+  game.result_decimal_places = 0;
+  if (decimal_round) {
+    int minimum_decimal_places = getMinimumDisplayDecimalPlaces(game.operation_result);
+    int max_display_decimal_places = getMaxDisplayDecimalPlaces(game.operation_result);
+    if (minimum_decimal_places > 0 && max_display_decimal_places >= minimum_decimal_places) {
+      game.result_decimal_places = random(minimum_decimal_places, max_display_decimal_places + 1);
+    }
+  } else if (game.current_operation == OP_DIVIDE) {
+    int required_decimal_places = getRequiredDecimalPlacesForExactDivision((int)round(game.operand_1), (int)round(game.operand_2));
+    int max_display_decimal_places = getMaxDisplayDecimalPlaces(game.operation_result);
+
+    if (required_decimal_places > 0 && max_display_decimal_places >= required_decimal_places) {
+      game.result_decimal_places = random(required_decimal_places, max_display_decimal_places + 1);
+    }
+  }
+
+  showNumber(number_display_1, game.operand_1);
+  showNumber(number_display_2, game.operand_2);
   Serial.println(String(F("operation result: ")) + String(game.operation_result));
 }
 
 void shuffleDisplayPositions() {
   game.correct_answer_position = random(1, 4);
   double answers[3] = {game.operation_result, 0, 0};
-  int decimal_places = getDecimalPlaces(game.operation_result);
+  int decimal_places = game.result_decimal_places;
+  answers[1] = drawNearbyWrongAnswer(game.operation_result, decimal_places, -1);
+  answers[2] = drawNearbyWrongAnswer(game.operation_result, decimal_places, 1);
 
-  if (decimal_places == 0) {
-    do {
-      int offset_1 = (int)getWrongAnswerStep(0);
-      int offset_2 = (int)getWrongAnswerStep(0);
-      answers[1] = game.operation_result + offset_1;
-      answers[2] = game.operation_result - offset_2;
-      if (answers[2] < 0) {
-        answers[2] = game.operation_result + offset_1 + offset_2;
-      }
-    } while (answers[1] == game.operation_result ||
-             answers[2] == game.operation_result ||
-             answers[1] == answers[2]);
-  } else {
-    do {
-      answers[1] = roundToDecimalPlaces(game.operation_result + getWrongAnswerStep(decimal_places), decimal_places);
-      answers[2] = roundToDecimalPlaces(game.operation_result - getWrongAnswerStep(decimal_places), decimal_places);
-      if (answers[2] < 0) {
-        answers[2] = roundToDecimalPlaces(game.operation_result + getWrongAnswerStep(decimal_places), decimal_places);
-      }
-    } while (answers[1] == game.operation_result ||
-             answers[2] == game.operation_result ||
-             answers[1] == answers[2]);
+  for (int attempts = 0; attempts < 10 && (answers[1] == game.operation_result || answers[2] == game.operation_result || answers[1] == answers[2]); attempts++) {
+    answers[1] = drawNearbyWrongAnswer(game.operation_result, decimal_places, 0);
+    answers[2] = drawNearbyWrongAnswer(game.operation_result, decimal_places, 0);
   }
 
   if (game.correct_answer_position == 2) {
@@ -670,8 +965,10 @@ void shuffleDisplayPositions() {
     answers[2] = temporary;
   }
 
+  printRoundDebug(answers[0], answers[1], answers[2], decimal_places);
+
   for (int i = 0; i < TOTAL_ANSWER_DISPLAYS; i++) {
-    showNumber(*tm1637_displays[i + 2], answers[i]);
+    showNumber(*tm1637_displays[i + 2], answers[i], decimal_places);
   }
 }
 
@@ -743,18 +1040,23 @@ uint8_t getDecimalDot(int decimal_places) {
   return 0b10000000;
 }
 
-void showNumber(TM1637Display &display, double value) {
+void showNumber(TM1637Display &display, double value, int forced_decimal_places) {
   if (value < 0 || value >= 10000) {
     resetDisplay(display);
     return;
   }
 
-  int decimal_places = getDecimalPlaces(value);
+  int decimal_places = forced_decimal_places;
+  if (decimal_places < 0) {
+    decimal_places = getMinimumDisplayDecimalPlaces(value);
+  }
+
+  int max_display_decimal_places = getMaxDisplayDecimalPlaces(value);
+  decimal_places = clampInt(decimal_places, 0, max_display_decimal_places);
   double rounded_value = roundToDecimalPlaces(value, decimal_places);
-  decimal_places = getDecimalPlaces(rounded_value);
 
   if (decimal_places == 0) {
-    display.showNumberDec((int)round(value), false);
+    display.showNumberDec((int)round(rounded_value), false);
     return;
   }
 
@@ -764,6 +1066,10 @@ void showNumber(TM1637Display &display, double value) {
   int display_number = integer_part * scale + decimal_part;
 
   display.showNumberDecEx(display_number, getDecimalDot(decimal_places), false, 4, 0);
+}
+
+void showNumber(TM1637Display &display, double value) {
+  showNumber(display, value, -1);
 }
 
 // ---------------------------------------------------------------------------

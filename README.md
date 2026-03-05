@@ -3,7 +3,7 @@
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Maths__Quiz__Game-181717?logo=github)](https://github.com/DegsTerin/Maths_Quiz_Game)
 [![Board](https://img.shields.io/badge/Board-Arduino_Uno-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/en/Main/ArduinoBoardUno)
 [![Simulation](https://img.shields.io/badge/Simulation-Wokwi-5C6BC0)](https://wokwi.com/projects/new/arduino-uno)
-[![Release](https://img.shields.io/badge/Release-v1.0.0-2E7D32)](https://github.com/DegsTerin/Maths_Quiz_Game/releases/tag/v1.0.0)
+[![Release](https://img.shields.io/badge/Release-v1.1.0-2E7D32)](https://github.com/DegsTerin/Maths_Quiz_Game/releases/tag/v1.1.0)
 An interactive Arduino-based maths quiz system with adaptive difficulty, multiple display modules, physical answer buttons, score tracking, and a complete Wokwi simulation setup.
 
 ## Project summary
@@ -16,7 +16,10 @@ This project presents arithmetic challenges using dedicated hardware modules:
 - one 16x2 I2C LCD for level and score feedback
 - three answer buttons, one reset button, and one potentiometer for difficulty selection
 
-The main sketch is located at `arduino/maths-quiz-game/maths-quiz-game.ino`.
+Main sketches:
+
+- English (en-gb): `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb.ino`
+- Portuguese (pt-br): `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br.ino`
 
 ## Gallery
 
@@ -57,7 +60,7 @@ The main sketch is located at `arduino/maths-quiz-game/maths-quiz-game.ino`.
 - 1 reset button
 - 1 potentiometer
 - 2 feedback LEDs
-- Resistors and wiring according to the assembled circuit
+- No external resistors for the answer/reset buttons (`INPUT_PULLUP` is used)
 
 ## Pin mapping
 
@@ -83,7 +86,12 @@ Configuration defined in the sketch:
 - Wrong LED: pin `13`
 - Potentiometer: `A0`
 
-Note: the sketch treats `HIGH` as a pressed button, matching the current hardware configuration with external resistors.
+Important wiring update:
+
+- Answer and reset buttons now use `INPUT_PULLUP`
+- Pressed state is `LOW`
+- Each button must be wired between input pin and `GND`
+- External 10k pull-down resistors are no longer required for these buttons
 
 ## How the game works
 
@@ -103,10 +111,11 @@ The generated values change according to the selected level:
 - Medium: wider ranges and a more balanced mix of operations
 - Hard: larger values and a stronger weighting towards multiplication and division
 
-Division rules:
+Decimal behaviour:
 
-- At easy level, division is more likely to be exact
-- At medium and hard levels, decimal answers may appear
+- Easy: 10% of rounds may include decimal operands/results
+- Medium: 20%
+- Hard: 30%
 
 ## Libraries
 
@@ -130,8 +139,10 @@ arduino/
 |-- libraries/
 |   |-- LiquidCrystal_I2C/
 |   `-- TM1637_Driver/
-`-- maths-quiz-game/
-    `-- maths-quiz-game.ino
+|-- maths-quiz-game-en-gb/
+|   `-- maths-quiz-game-en-gb.ino
+`-- maths-quiz-game-pt-br/
+    `-- maths-quiz-game-pt-br.ino
 
 assets/
 `-- media/
@@ -167,7 +178,9 @@ simulation/
 
 1. Open the Arduino IDE.
 2. Install the required libraries if needed.
-3. Open `arduino/maths-quiz-game/maths-quiz-game.ino`.
+3. Open one sketch folder:
+   - `arduino/maths-quiz-game-en-gb/` or
+   - `arduino/maths-quiz-game-pt-br/`
 4. Connect the Arduino board.
 5. Compile and upload the sketch.
 
@@ -180,7 +193,9 @@ You can start from the Arduino Uno template:
 Recommended setup:
 
 1. Create a new Arduino Uno project in Wokwi.
-2. Replace the default `sketch.ino` with `simulation/sketch.ino`, or copy the code from `arduino/maths-quiz-game/maths-quiz-game.ino`.
+2. Replace the default `sketch.ino` with `simulation/sketch.ino`, or copy the code from one of:
+   - `arduino/maths-quiz-game-en-gb/maths-quiz-game-en-gb.ino`
+   - `arduino/maths-quiz-game-pt-br/maths-quiz-game-pt-br.ino`
 3. Replace the default `diagram.json` with `simulation/diagram.json`.
 4. Replace or create `libraries.txt` using `simulation/libraries.txt`.
 5. Confirm that `TM1637Display`, `LiquidCrystal_I2C`, and `LedControl` are available in the project.
