@@ -546,6 +546,7 @@ void printRoundDebug(double option_1, double option_2, double option_3, int resu
   int operand_1_places = getMinimumDisplayDecimalPlaces(game.operand_1);
   int operand_2_places = getMinimumDisplayDecimalPlaces(game.operand_2);
 
+  Serial.println();
   Serial.println(F("---- Rodada ----"));
   Serial.print(F("Equacao: "));
   Serial.print(formatValueForSerial(game.operand_1, operand_1_places));
@@ -934,7 +935,6 @@ void generateNumbers() {
 
   showNumber(number_display_1, game.operand_1);
   showNumber(number_display_2, game.operand_2);
-  Serial.println(String(F("resultado operacao: ")) + String(game.operation_result));
 }
 
 void shuffleDisplayPositions() {
