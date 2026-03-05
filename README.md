@@ -45,6 +45,7 @@ Main sketches:
 - Three difficulty levels: easy, medium, and hard
 - Animated operation selection on the 8x8 LED matrix
 - Three multiple-choice answers shown on TM1637 displays
+- Button color LEDs can light up immediately when each button is pressed
 - Right and wrong feedback using dedicated LEDs
 - Right and wrong score tracking on the I2C LCD
 - Potentiometer-based difficulty selection
@@ -60,6 +61,8 @@ Main sketches:
 - 1 reset button
 - 1 potentiometer
 - 2 feedback LEDs
+- 3 button indicator LEDs (or illuminated button LEDs)
+- 1 protoboard module / protoshield module for wiring integration
 - No external resistors for the answer/reset buttons (`INPUT_PULLUP` is used)
 
 ## Pin mapping
@@ -85,6 +88,29 @@ Configuration defined in the sketch:
 - Right LED: pin `12`
 - Wrong LED: pin `13`
 - Potentiometer: `A0`
+
+Optional feedback module on wrong answer output:
+
+- You can connect an active buzzer module (bip) or a vibracall vibration module together with the wrong LED signal on pin `13` (using the module input + `GND`) for audible or haptic feedback.
+
+Construction and enclosure variants:
+
+- Main build version in MDF
+- Second build version in acrylic
+
+## Additional build photos
+
+### Acrylic enclosure version
+
+![Acrylic enclosure front view](assets/media/acrylic-front.jpg)
+
+### Rear wiring with protoshield/protoboard module
+
+![Rear wiring overview with protoshield](assets/media/acrylic-rear-wiring.jpg)
+
+![Protoshield close view](assets/media/protoshield-close.jpg)
+
+![Arduino and protoshield module](assets/media/arduino-protoshield.jpg)
 
 Important wiring update:
 
