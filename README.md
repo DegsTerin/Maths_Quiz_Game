@@ -1,10 +1,17 @@
 # Maths Quiz Game
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Maths__Quiz__Game-181717?logo=github)](https://github.com/DegsTerin/Maths_Quiz_Game)
+[![Sponsor](https://img.shields.io/badge/Sponsor-DegsTerin-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/DegsTerin)
 [![Board](https://img.shields.io/badge/Board-Arduino_Uno-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/en/Main/ArduinoBoardUno)
 [![Simulation](https://img.shields.io/badge/Simulation-Wokwi-5C6BC0)](https://wokwi.com/projects/new/arduino-uno)
 [![Release](https://img.shields.io/badge/Release-v1.1.0-2E7D32)](https://github.com/DegsTerin/Maths_Quiz_Game/releases/tag/v1.1.0)
 An interactive Arduino-based maths quiz system with adaptive difficulty, multiple display modules, physical answer buttons, score tracking, and a complete Wokwi simulation setup.
+
+## Support
+
+If this project helps you, consider sponsoring ongoing development:
+
+- GitHub Sponsors: `https://github.com/sponsors/DegsTerin`
 
 ## Project summary
 
