@@ -4,7 +4,9 @@
 [![Board](https://img.shields.io/badge/Board-Arduino_Uno-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/en/Main/ArduinoBoardUno)
 [![Simulation](https://img.shields.io/badge/Simulation-Wokwi-5C6BC0)](https://wokwi.com/projects/new/arduino-uno)
 [![Release](https://img.shields.io/badge/Release-v1.1.0-2E7D32)](https://github.com/DegsTerin/Maths_Quiz_Game/releases/tag/v1.1.0)
+
 [![Sponsor](https://img.shields.io/badge/Sponsor-DegsTerin-2563EB?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/DegsTerin)
+
 An interactive Arduino-based maths quiz system with adaptive difficulty, multiple display modules, physical answer buttons, score tracking, and a complete Wokwi simulation setup.
 
 ## Support
