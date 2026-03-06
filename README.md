@@ -111,15 +111,15 @@ Construction and enclosure variants:
 
 ### Acrylic enclosure version
 
-![Acrylic enclosure front view](assets/media/acrylic-front.jpg)
+![Acrylic enclosure front view](assets/media/acrylic-front.png)
 
 ### Rear wiring with protoshield/protoboard module
 
-![Rear wiring overview with protoshield](assets/media/acrylic-rear-wiring.jpg)
+![Rear wiring overview with protoshield](assets/media/acrylic-rear-wiring.png)
 
-![Protoshield close view](assets/media/protoshield-close.jpg)
+![Protoshield close view](assets/media/protoshield-close.png)
 
-![Arduino and protoshield module](assets/media/arduino-protoshield.jpg)
+![Arduino and protoshield module](assets/media/arduino-protoshield.png)
 
 Important wiring update:
 
@@ -190,11 +190,15 @@ arduino/
 
 assets/
 `-- media/
+    |-- acrylic-front.png
+    |-- acrylic-rear-wiring.png
+    |-- arduino-protoshield.png
     |-- maths-quiz-game-cover.png
     |-- assembly-front.jpg
     |-- assembly-top.jpg
     |-- demonstration.gif
-    `-- demonstration.mp4
+    |-- demonstration.mp4
+    `-- protoshield-close.png
 
 design/
 `-- vector/
