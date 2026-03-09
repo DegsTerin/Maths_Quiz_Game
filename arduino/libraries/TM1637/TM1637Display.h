@@ -26,7 +26,6 @@
 #define SEG_E   0b00010000
 #define SEG_F   0b00100000
 #define SEG_G   0b01000000
-#define SEG_DP  0b10000000
 
 #define DEFAULT_BIT_DELAY  100
 
@@ -70,7 +69,7 @@ public:
 
   //! Display a decimal number
   //!
-  //! Display the given argument as a decimal number.
+  //! Dispaly the given argument as a decimal number.
   //!
   //! @param num The number to be shown
   //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
@@ -83,7 +82,7 @@ public:
 
   //! Display a decimal number, with dot control
   //!
-  //! Display the given argument as a decimal number. The dots between the digits (or colon)
+  //! Dispaly the given argument as a decimal number. The dots between the digits (or colon)
   //! can be individually controlled.
   //!
   //! @param num The number to be shown
@@ -108,7 +107,7 @@ public:
 
   //! Display a hexadecimal number, with dot control
   //!
-  //! Display the given argument as a hexadecimal number. The dots between the digits (or colon)
+  //! Dispaly the given argument as a hexadecimal number. The dots between the digits (or colon)
   //! can be individually controlled.
   //!
   //! @param num The number to be shown
@@ -140,7 +139,7 @@ public:
   //! @param digit A number between 0 to 15
   //! @return A code representing the 7 segment image of the digit (LSB - segment A;
   //!         bit 6 - segment G; bit 7 - always zero)
-  static uint8_t encodeDigit(uint8_t digit);
+  uint8_t encodeDigit(uint8_t digit);
 
 protected:
    void bitDelay();
