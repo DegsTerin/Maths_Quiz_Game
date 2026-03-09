@@ -52,11 +52,6 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_Addr,uint8_t lcd_cols,uint8_t l
   _backlightval = LCD_NOBACKLIGHT;
 }
 
-void LiquidCrystal_I2C::oled_init(){
-  _oled = true;
-	init_priv();
-}
-
 void LiquidCrystal_I2C::init(){
 	init_priv();
 }
@@ -132,7 +127,6 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 void LiquidCrystal_I2C::clear(){
 	command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
 	delayMicroseconds(2000);  // this command takes a long time!
-  if (_oled) setCursor(0,0);
 }
 
 void LiquidCrystal_I2C::home(){
@@ -217,15 +211,6 @@ void LiquidCrystal_I2C::createChar(uint8_t location, uint8_t charmap[]) {
 	command(LCD_SETCGRAMADDR | (location << 3));
 	for (int i=0; i<8; i++) {
 		write(charmap[i]);
-	}
-}
-
-//createChar with PROGMEM input
-void LiquidCrystal_I2C::createChar(uint8_t location, const char *charmap) {
-	location &= 0x7; // we only have 8 locations 0-7
-	command(LCD_SETCGRAMADDR | (location << 3));
-	for (int i=0; i<8; i++) {
-	    	write(pgm_read_byte_near(charmap++));
 	}
 }
 
@@ -317,8 +302,6 @@ void LiquidCrystal_I2C::printstr(const char c[]){
 
 
 // unsupported API functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 void LiquidCrystal_I2C::off(){}
 void LiquidCrystal_I2C::on(){}
 void LiquidCrystal_I2C::setDelay (int cmdDelay,int charDelay) {}
@@ -328,5 +311,5 @@ uint8_t LiquidCrystal_I2C::init_bargraph(uint8_t graphtype){return 0;}
 void LiquidCrystal_I2C::draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end){}
 void LiquidCrystal_I2C::draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_row_end){}
 void LiquidCrystal_I2C::setContrast(uint8_t new_val){}
-#pragma GCC diagnostic pop
+
 	

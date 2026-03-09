@@ -11,12 +11,6 @@ An interactive Arduino-based maths quiz system with adaptive difficulty, multipl
 
 The [`tutorial/`](tutorial/) folder contains the original initial project, preserved in this repository as version zero (`v0`), now reorganized into Arduino, electronics, vector, and document subfolders for easier reference.
 
-## Support
-
-If this project helps you, consider sponsoring ongoing development:
-
-- GitHub Sponsors: `https://github.com/sponsors/DegsTerin`
-
 ## Project summary
 
 This project presents arithmetic challenges using dedicated hardware modules:
@@ -301,8 +295,8 @@ The repository also includes:
 - The repository combines source code, design assets, electronics documentation, and simulation files in one place.
 - The file `hardware/electronics/maths-quiz-game.txt` appears to use inconsistent encoding and was not treated as a primary documentation source.
 
+## Support
 
+If this project helps you, consider sponsoring ongoing development:
 
-
-
-
+- GitHub Sponsors: `https://github.com/sponsors/DegsTerin`
