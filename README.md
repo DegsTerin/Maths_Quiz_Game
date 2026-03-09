@@ -9,7 +9,7 @@ An interactive Arduino-based maths quiz system with adaptive difficulty, multipl
 
 ## Project origin
 
-The [`tutorial/`](tutorial/) folder contains the original initial project, preserved in this repository as version zero (`v0`).
+The [`tutorial/`](tutorial/) folder contains the original initial project, preserved in this repository as version zero (`v0`), now reorganized into Arduino, electronics, vector, and document subfolders for easier reference.
 
 ## Support
 
@@ -171,18 +171,23 @@ Libraries used by the sketch:
 
 Libraries included in the repository:
 
-- `arduino/libraries/TM1637_Driver`
+- `arduino/libraries/TM1637`
 - `arduino/libraries/LiquidCrystal_I2C`
+- `arduino/libraries/LedControl`
 
-Note: the sketch includes `LedControl.h`, but that library is not versioned in this repository. If it is missing in your Arduino environment, install it manually.
+Reference image:
+
+![Bundled Arduino libraries overview](arduino/libraries/libraries.png)
 
 ## Repository structure
 
 ```text
 arduino/
 |-- libraries/
+|   |-- LedControl/
 |   |-- LiquidCrystal_I2C/
-|   `-- TM1637_Driver/
+|   |-- TM1637/
+|   `-- libraries.png
 |-- maths-quiz-game-en-gb/
 |   `-- maths-quiz-game-en-gb.ino
 |-- maths-quiz-game-en-gb-integers/
@@ -210,6 +215,7 @@ design/
     `-- maths-box-v8.ai
 
 docs/
+|-- github-sponsors-kit.md
 |-- project-tutorial.docx
 |-- release-v1.0.0.md
 `-- release-v1.1.0.md
@@ -227,7 +233,13 @@ simulation/
 `-- wokwi-project.txt
 
 tutorial/
-`-- original project files kept as version zero (v0)
+|-- Arduino/
+|   |-- libraries/
+|   `-- MPA-Matematica/
+|-- Eletrônica/
+|-- Vetor/
+|-- README.md
+`-- Tutorial.docx
 ```
 
 ## Run on hardware
@@ -277,7 +289,9 @@ The repository also includes:
 - electronics files in `hardware/electronics`
 - vector design files in `design/vector`
 - a project tutorial document in `docs/project-tutorial.docx`
-- the original initial project in `tutorial/`, kept as version zero (`v0`)
+- a sponsor support kit in `docs/github-sponsors-kit.md`
+- the original initial project in `tutorial/`, kept as version zero (`v0`) and reorganized with its own `tutorial/README.md`
+- a historical tutorial document in `tutorial/Tutorial.docx`
 - prototype photos and media in `assets/media`
 - complete Wokwi simulation files in `simulation`
 
