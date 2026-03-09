@@ -7,6 +7,10 @@
 
 An interactive Arduino-based maths quiz system with adaptive difficulty, multiple display modules, physical answer buttons, score tracking, and a complete Wokwi simulation setup.
 
+## Project origin
+
+The [`tutorial/`](tutorial/) folder contains the original initial project, preserved in this repository as version zero (`v0`).
+
 ## Support
 
 If this project helps you, consider sponsoring ongoing development:
@@ -221,6 +225,9 @@ simulation/
 |-- libraries.txt
 |-- wokwi.png
 `-- wokwi-project.txt
+
+tutorial/
+`-- original project files kept as version zero (v0)
 ```
 
 ## Run on hardware
@@ -270,6 +277,7 @@ The repository also includes:
 - electronics files in `hardware/electronics`
 - vector design files in `design/vector`
 - a project tutorial document in `docs/project-tutorial.docx`
+- the original initial project in `tutorial/`, kept as version zero (`v0`)
 - prototype photos and media in `assets/media`
 - complete Wokwi simulation files in `simulation`
 
